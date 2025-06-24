@@ -25,29 +25,48 @@ class EmpUpdate(EmpCreate):
 
 @emp_router.get("/emp", response_model=List[EmpOut])
 async def get_emp(db:db_dependecy):
-    emps=db.query(Employee).all()
-    return emps
+    try:
+        emps=db.query(Employee).all()
+        print("All Employees found")
+        if emps is not None:
+            return emps
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return []
+
 
 @emp_router.get("/emp/{emp_id}", response_model=EmpOut)
 async def get_single_emp(emp_id:int, db:db_dependecy):
-    emp=db.query(Employee).filter(Employee.id==emp_id).first()
-    return emp
+    try:
+        emp=db.query(Employee).filter(Employee.id==emp_id).first()
+        if emp is not None:
+            print(f"Found employee with employeeID {emp_id}")
+            return emp
+        else:
+            raise HTTPException(status_code=404, detail="Can't find employee")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 @emp_router.post("/emp", response_model=EmpCreate)
 async def add_emp(db: db_dependecy, new_emp:EmpBase):
-    db_emp=Employee(name=new_emp.name, email=new_emp.email, dept=new_emp.dept)
-    db.add(db_emp)
-    db.commit()
-    db.refresh(db_emp)
-
-    return db_emp
+    try:
+        db_emp=Employee(name=new_emp.name, email=new_emp.email, dept=new_emp.dept)
+        db.add(db_emp)
+        db.commit()
+        db.refresh(db_emp)
+        print(f"Created and added new employee whose name is {new_emp.name}")
+        return db_emp
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 
 @emp_router.delete("/emp/{emp_id}", response_model=EmpOut)
 async def delete_emp(emp_id: int, db: db_dependecy):
     emp = db.query(Employee).filter(Employee.id == emp_id).first()
     if emp is None:
-        return {"error": "Employee not found"}
+        raise HTTPException(status_code=404, detail="Employee not found")
     db.delete(emp)
     db.commit()
     return emp
