@@ -13,7 +13,7 @@ DBSession: sessionmaker = None
 def init_db():
     try:
         global DBSession, engine
-        pg_url='postgresql://postgres:Password.postgresql3904@localhost:5432/db'
+        pg_url='postgresql://{username}:{password}@localhost:5432/{db_name}'
         engine=create_engine(pg_url)
         conn=engine.connect()
         conn.close()
